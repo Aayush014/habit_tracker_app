@@ -1,23 +1,24 @@
-import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:habit_tracker_app/Theme/dark_theme.dart';
+import 'package:habit_tracker_app/Theme/light_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  bool click = true;
+  ThemeData _themeData = lightTheme;
 
-  ThemeProvider() {
-    _loadTheme();
-  }
+  ThemeData get themeData => _themeData;
 
-  Future<void> _loadTheme() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    click = preferences.getBool("theme") ?? true;
+  bool get isDarkMode => _themeData == darkTheme;
+
+  set themeData(ThemeData themeData) {
+    _themeData = themeData;
     notifyListeners();
   }
 
-  Future<void> changeTheme() async {
-    click = !click;
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    await preferences.setBool("theme", click);
-    notifyListeners();
+  void toggleTheme() {
+    if (_themeData == lightTheme) {
+      themeData = darkTheme;
+    } else {
+      themeData = lightTheme;
+    }
   }
 }

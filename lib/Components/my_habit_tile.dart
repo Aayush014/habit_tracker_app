@@ -22,20 +22,25 @@ class MyHabitTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
       child: Slidable(
-        endActionPane: ActionPane(motion: const StretchMotion(), children: [
-          SlidableAction(
-            onPressed: editHabit,
-            backgroundColor: Colors.grey.shade800,
-            icon: Icons.settings,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          SlidableAction(
-            onPressed: deleteHabit,
-            backgroundColor: Colors.red,
-            icon: Icons.delete,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ]),
+        endActionPane: ActionPane(
+          motion: const StretchMotion(),
+          children: [
+            SlidableAction(flex: 1,
+              onPressed: editHabit,
+              backgroundColor: Colors.grey.shade800,
+              icon: Icons.settings,
+              label: 'Edit',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            SlidableAction(
+              onPressed: deleteHabit,
+              backgroundColor: Colors.red,
+              icon: Icons.delete,
+              label: 'Delete',
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
         child: GestureDetector(
           onTap: () {
             if (onChanged != null) {
@@ -43,27 +48,26 @@ class MyHabitTile extends StatelessWidget {
             }
           },
           child: Container(
-              padding: const EdgeInsets.all(12),
-              // margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-              decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Colors.green
-                      : Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(8)),
-              child: ListTile(
-                title: Text(
-                  text,
-                  style: TextStyle(
-                      color: isCompleted
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.inversePrimary),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isCompleted ? Color(0xff007BFF) : Theme.of(context).colorScheme.secondary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ListTile(
+              title: Text(
+                text,
+                style: TextStyle(
+                  color: isCompleted ? Colors.white : Theme.of(context).colorScheme.onSecondary,
                 ),
-                trailing: Checkbox(
-                  activeColor: Colors.green,
-                  value: isCompleted,
-                  onChanged: onChanged,
-                ),
-              )),
+              ),
+              trailing: Checkbox(
+                activeColor: Color(0xff007BFF),
+                value: isCompleted,
+                onChanged: onChanged,
+                semanticLabel: text,
+              ),
+            ),
+          ),
         ),
       ),
     );

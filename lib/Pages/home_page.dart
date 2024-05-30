@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:habit_tracker_app/Components/my_habit_tile.dart';
-import 'package:habit_tracker_app/Components/my_heat_map.dart';
 import 'package:habit_tracker_app/Database/habit_database.dart';
 import 'package:habit_tracker_app/Modal/habit.dart';
 import 'package:habit_tracker_app/Theme/Provider/theme_provider.dart';
@@ -17,14 +17,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var animationKey = UniqueKey();
+  final TextEditingController textController = TextEditingController();
 
   @override
   void initState() {
-    Provider.of<HabitDatabase>(context, listen: false).readHabits();
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<HabitDatabase>(context, listen: false).readHabits();
+    });
   }
 
-  final TextEditingController textController = TextEditingController();
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
 
   void createNewHabit() {
     showDialog(
@@ -37,22 +44,24 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
-              String newHabitName = textController.text;
-              context.read<HabitDatabase>().addHabit(newHabitName);
-              Navigator.of(context).pop();
-              textController.clear();
+              String newHabitName = textController.text.trim();
+              if (newHabitName.isNotEmpty) {
+                context.read<HabitDatabase>().addHabit(newHabitName);
+                Navigator.of(context).pop();
+                textController.clear();
+              }
             },
             child: const Text("Save"),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               textController.clear();
             },
             child: const Text("Cancel"),
-          )
+          ),
         ],
       ),
     );
@@ -66,32 +75,34 @@ class _HomePageState extends State<HomePage> {
 
   void editHabitBox(Habit habit) {
     textController.text = habit.name;
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         content: TextField(
           controller: textController,
+          decoration: const InputDecoration(
+            hintText: "Edit habit name",
+          ),
         ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
-              String newHabitName = textController.text;
-              context
-                  .read<HabitDatabase>()
-                  .updateHabitName(habit.id, newHabitName);
-              Navigator.of(context).pop();
-              textController.clear();
+              String newHabitName = textController.text.trim();
+              if (newHabitName.isNotEmpty) {
+                context.read<HabitDatabase>().updateHabitName(habit.id, newHabitName);
+                Navigator.of(context).pop();
+                textController.clear();
+              }
             },
             child: const Text("Save"),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               textController.clear();
             },
             child: const Text("Cancel"),
-          )
+          ),
         ],
       ),
     );
@@ -103,19 +114,19 @@ class _HomePageState extends State<HomePage> {
       builder: (context) => AlertDialog(
         title: const Text("Are you sure you want to delete?"),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
               context.read<HabitDatabase>().deleteHabit(habit.id);
               Navigator.of(context).pop();
             },
             child: const Text("Delete"),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
             child: const Text("Cancel"),
-          )
+          ),
         ],
       ),
     );
@@ -126,11 +137,14 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: ListView(
+        shrinkWrap: true,
         children: [
-          _buildHeatMap(),
+          buildHeatMap(context),
           _buildHabitList(),
+          const SizedBox(height: 100),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -138,25 +152,50 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHeatMap() {
+  Widget buildHeatMap(BuildContext context) {
     final habitDatabase = context.watch<HabitDatabase>();
     List<Habit> currentHabits = habitDatabase.currentHabits;
-    return FutureBuilder<DateTime?>(
-      future: habitDatabase.getFirstLaunchDate(),
-      builder: (context, snapshot) {
-        if(snapshot.hasData){
-          return MyHeatMap(startDate: snapshot.data!, datesets: prepHeatMapDataset(currentHabits),);
-        }
-        else{
-          return Container();
-        }
-      },
+
+    return Container(
+      padding: const EdgeInsets.only(top: 25, bottom: 25),
+      child: DefaultTextStyle(
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+        child: HeatMap(
+          startDate: DateTime.now(),
+          endDate: DateTime.now().add(const Duration(days: 0)),
+          datasets: prepHeatMapDataset(currentHabits),
+          colorMode: ColorMode.color,
+          defaultColor: Provider.of<ThemeProvider>(context).isDarkMode
+              ? Colors.grey[800]
+              : Colors.white,
+          textColor: Provider.of<ThemeProvider>(context).isDarkMode
+              ? Colors.white
+              : Colors.black,
+          fontSize: 15,
+          showColorTip: false,
+          showText: true,
+          scrollable: true,
+          size: 33,
+          borderRadius: 10,
+          colorsets: {
+            1: Colors.blue.shade200,
+            2: Colors.blue.shade300,
+            3: Colors.blue.shade400,
+            4: Colors.blue.shade500,
+            5: Colors.blue.shade600,
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildHabitList() {
     final habitDatabase = context.watch<HabitDatabase>();
     List<Habit> currentHabits = habitDatabase.currentHabits;
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -164,6 +203,7 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         final habit = currentHabits[index];
         bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
+
         return MyHabitTile(
           isCompleted: isCompletedToday,
           text: habit.name,
@@ -181,7 +221,9 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         height: 60,
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(30)),
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(30),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -189,7 +231,9 @@ class _HomePageState extends State<HomePage> {
               height: 38,
               width: 130,
               decoration: BoxDecoration(
-                  color: Colors.green, borderRadius: BorderRadius.circular(20)),
+                color: const Color(0xff007BFF),
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: CupertinoButton(
                 color: Colors.transparent,
                 padding: EdgeInsets.zero,
@@ -202,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "New Habit",
                       style: TextStyle(fontWeight: FontWeight.bold),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -223,10 +267,10 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         animationKey = UniqueKey();
                         Provider.of<ThemeProvider>(context, listen: false)
-                            .changeTheme();
+                            .toggleTheme();
                       },
                       child: Icon(
-                        (Provider.of<ThemeProvider>(context).click)
+                        (Provider.of<ThemeProvider>(context).isDarkMode)
                             ? CupertinoIcons.sun_max_fill
                             : CupertinoIcons.moon,
                         color: Theme.of(context).colorScheme.tertiary,
@@ -242,7 +286,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {},
               child: Icon(
                 Icons.settings_outlined,
-                color: Theme.of(context).colorScheme.tertiary,
+                color: Theme.of(context).colorScheme.secondary,
                 size: 30,
               ),
             ),

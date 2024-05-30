@@ -54,18 +54,16 @@ class _IntroPageState extends State<IntroPage> {
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
                   height: 0.6,
-                  color: const Color(0xFF4FA65B)),
+                  color: const Color(0xFF007BFF)),
             ),
             Text(
               "WITH\n\nHABIT ALIGN",
               style: GoogleFonts.libreFranklin(
                   fontSize: 40, fontWeight: FontWeight.bold, height: 0.6),
             ),
-            const SizedBox(
-              height: 10,
-            ),
+
             SizedBox(
-                width: 150,
+                width: 100,
                 child: Image.asset(
                   "Assets/Img/heartBeat.png",
                   fit: BoxFit.cover,
