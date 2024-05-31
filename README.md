@@ -28,7 +28,7 @@ To run this project locally, follow these steps:
 
 1. **Clone the repository**
     ```bash
-    git clone https://github.com/Aayush014/my_browser_app.git
+    git clone https://github.com/Aayush014/habit_tracker_app.git
     ```
 
 2. **Install dependencies**
